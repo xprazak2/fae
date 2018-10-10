@@ -1,12 +1,12 @@
 module Fae
   class StaticPage < ActiveRecord::Base
-
     include Fae::BaseModelConcern
     include Fae::StaticPageConcern
 
     validates :title, presence: true
 
     @singleton_is_setup = false
+    @current_locale = I18n.locale
 
     def self.instance
       setup_dynamic_singleton
@@ -32,34 +32,56 @@ module Fae
   private
 
     def self.setup_dynamic_singleton
-      return if @singleton_is_setup
-
       fae_fields.each do |name, value|
         type = value.is_a?(Hash) ? value[:type] : value
-        languages = value.try(:[], :languages)
+        languages = value.try(:[], :languages) || []
+        process_field(languages, name, type, value)
+      end
+      @current_locale = I18n.locale
+      @singleton_is_setup = true
+    end
 
-        if languages.present?
-          languages.each do |lang|
-            # Save with suffix for form fields
-            define_association("#{name}_#{lang}", type)
-            define_validations("#{name}_#{lang}", type, value[:validates]) if supports_validation(type, value)
-          end
-          # Save with lookup to have default language return in front-end use (don't need to worry about validations here)
-          default_language = Rails.application.config.i18n.default_locale || languages.first
-          define_association(name, type, "#{name}_#{default_language}")
-        else
-          # Normal content_blocks
-          define_association(name, type)
-          define_validations(name, type, value[:validates]) if supports_validation(type, value)
-        end
+    def self.process_field(languages, name, type, value)
+      return if @singleton_is_setup && languages.empty?
+      if !@singleton_is_setup && languages.empty?
+        return singleton_without_lang(name, type, value)
+      end
+      process_field_with_lang languages, name, type, value
+    end
+
+    def self.process_field_with_lang(languages, name, type, value)
+      if !@singleton_is_setup && !languages.empty?
+        singleton_with_lang(languages, name, type, value)
       end
 
-      @singleton_is_setup = true
+      if I18n.locale != @current_locale && !languages.empty?
+        rebind_current_lang(name, type)
+      end
+    end
+
+    def self.rebind_current_lang(name, type)
+      define_association(name, type, "#{name}_#{I18n.locale}")
+    end
+
+    def self.singleton_with_lang(languages, name, type, value)
+      languages.each do |lang|
+        # Save with suffix for form fields
+        define_association("#{name}_#{lang}", type)
+        if supports_validation(type, value)
+          define_validations("#{name}_#{lang}", type, value[:validates])
+        end
+      end
+    end
+
+    def self.singleton_without_lang(name, type, value)
+      define_association(name, type)
+      if supports_validation(type, value)
+        define_validations(name, type, value[:validates])
+      end
     end
 
     def self.define_association(name, type, locale_name = nil)
       locale_name ||= name
-
       send :has_one, name.to_sym, -> { where(attached_as: locale_name.to_s)}, as: poly_sym(type), class_name: type.to_s, dependent: :destroy
       send :accepts_nested_attributes_for, name, allow_destroy: true
       send :define_method, :"#{name}_content", -> { send(name.to_sym).try(:content) }
@@ -104,6 +126,5 @@ module Fae
         return assoc_obj.as_json
       end
     end
-
   end
 end
