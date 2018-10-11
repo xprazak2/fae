@@ -1,0 +1,12 @@
+cs:
+  fae:
+    save_notice: 'Úspěšně uloženo.'
+    save_error: 'Nelze uložit, zkontrolujte chyby.'
+    delete_notice: 'Položka byla úspěšně smazána.'
+    delete_error: 'Tato položka má asociavané objekty, které brání, aby byla smazána.'
+    delete_confirmation: 'Jste si jistí, že chcete trvale smazat tuto položku?'
+    clone_confirmation: "Jste si jistí, že chece vytvořit klon?"
+    unauthorized_error: 'Nemáte práva k prohlížení této stránky.'
+    exceeded_upload_limit: "Tato položka je větší než ### MB limit. Nemáte nějákou jinou?"
+    save: 'Uložit'
+    cancel: 'Zpět'

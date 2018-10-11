@@ -21,7 +21,8 @@ module Fae
     private
 
     def set_locale
-      I18n.locale = :en
+      LangService.instance.update_user_lang(current_user)
+      # I18n.locale = :en
     end
 
     def check_disabled_environment
