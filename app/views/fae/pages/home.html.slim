@@ -1,7 +1,8 @@
 header.content-header.js-content-header.-dashboard
   div
     i.icon-home>
-    | &nbsp;&nbsp; = t('fae.page.hello')
+    | &nbsp;&nbsp;
+    = t('fae.page.hello')
     strong< = current_user.full_name
 
 == render 'flash_messages'

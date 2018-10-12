@@ -10,7 +10,7 @@ module Fae
       I18n.locale = user.nil? ? :en : user.language
     end
 
-    def page_lang=(lang)
+    def update_page_lang(lang)
       return @page_lang if @page_lang == lang
       @page_lang = lang
     end

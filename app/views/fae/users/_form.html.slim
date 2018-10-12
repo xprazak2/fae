@@ -1,7 +1,7 @@
 = simple_form_for(@user, html: {multipart: true, novalidate: true}) do |f|
   header.content-header.js-content-header
     - if params[:action] === 'settings'
-      h1 t('fae.user.header')
+      h1 = t('fae.user.header')
     - else
       = form_header @user
     .content-header-buttons
